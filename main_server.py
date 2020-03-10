@@ -29,7 +29,6 @@ t_before_save = 10
 max_doc_on_page = 100
 
 # Init db connection
-# TODO: check sharding?
 client = MongoClient(os.environ.get("MONGO_URL"), int(os.environ.get("MONGO_PORT")),
                      username=os.environ.get("MONGO_USER"), password=os.environ.get("MONGO_PASS"))
 db = client['IR-db']
@@ -38,6 +37,11 @@ doc_db = db['docs']
 vocab_db = db['vocab']
 index_db = db['index']
 deleted_db = db['deleted']
+
+# Setup sharding
+client.admin.command('enableSharding', 'IR-db')
+client.admin.command('shardCollection', 'IR-db.docs', key={'id': 1})
+client.admin.command('shardCollection', 'IR-db.index', key={'word': 1})
 
 # Make indexes on primary key for index and docs
 index_db.create_index('word', unique=True)
