@@ -338,28 +338,4 @@ def search_in_index(inverted_index, new_query):
         return docs
 
 
-def find_by_query(query, inverted_index, soundex_index, prefix_tree):
-    new_query = parse_query(inverted_index, soundex_index, prefix_tree, query)
-    docs = search_in_index(inverted_index, new_query)
-    return docs
 
-
-index_dir = './index'
-
-
-def store_index(inverted_index):
-    if not os.path.exists(index_dir):
-        os.mkdir(index_dir)
-    processing_logger.debug(f'Storing inverted index of length {len(inverted_index.keys())}')
-    while inverted_index:
-        word, doc_ids = inverted_index.popitem()
-        idx_file = os.path.join(index_dir + word)
-        if os.path.exists(idx_file):
-            index = open(idx_file, 'r')
-            previous_index = json.loads(index.read())
-            to_store = list(doc_ids) + previous_index
-            index.close()
-        else:
-            to_store = list(doc_ids)
-        index = open(idx_file, 'w+')
-        index.write(json.dumps(to_store))
