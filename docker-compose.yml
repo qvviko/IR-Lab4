@@ -1,4 +1,5 @@
-version: '3.3'
+version: '2'
+
 services:
   main_server:
     build: . # build from Dockerfile
@@ -11,7 +12,13 @@ services:
       - .env
     ports:
       - 8080:8080
-  #    restart: always
+    depends_on:
+      - mongodb-sharded
+      - mongodb-cfg-primary
+      - mongodb-shard0-primary
+      - mongodb-shard1-primary
+      - mongodb-shard2-primary
+    restart: always
   crawler:
     build: .
     command: python crawler.py # command to start container
@@ -23,23 +30,98 @@ services:
       - .env
     depends_on:
       - main_server
+      - mongodb-sharded
+      - mongodb-cfg-primary
+      - mongodb-shard0-primary
+      - mongodb-shard1-primary
+      - mongodb-shard2-primary
     restart: always
 
-  mongo:
-    image: mongo:4.2.0-bionic
-    command: mongod
-    volumes:
-      - ./mongo/data:/mongo/data
+  mongodb-sharded:
+    image: 'bitnami/mongodb-sharded:4.2'
+    environment:
+      - MONGODB_ADVERTISED_HOSTNAME=mongodb-sharded
+      - MONGODB_SHARDING_MODE=mongos
+      - MONGODB_CFG_PRIMARY_HOST=mongodb-cfg-primary
+      - MONGODB_CFG_REPLICA_SET_NAME=cfgreplicaset
+      - MONGODB_REPLICA_SET_KEY=replicasetkey123
+      - MONGODB_ROOT_PASSWORD=password123
     ports:
-      - 27017:27017
-    env_file:
-      - .env
+      - "27017:27017"
+    volumes:
+      - './mongo/data:/bitnami'
     networks:
       - webnet
+
+  mongodb-shard0-primary:
+    image: 'bitnami/mongodb-sharded:4.2'
+    environment:
+      - MONGODB_ADVERTISED_HOSTNAME=mongodb-shard0-primary
+      - MONGODB_SHARDING_MODE=shardsvr
+      - MONGODB_MONGOS_HOST=mongodb-sharded
+      - MONGODB_ROOT_PASSWORD=password123
+      - MONGODB_REPLICA_SET_MODE=primary
+      - MONGODB_REPLICA_SET_KEY=replicasetkey123
+      - MONGODB_REPLICA_SET_NAME=shard0
+    volumes:
+      - 'shard0_data:/bitnami'
+    networks:
+      - webnet
+
+  mongodb-shard1-primary:
+    image: 'bitnami/mongodb-sharded:4.2'
+    environment:
+      - MONGODB_ADVERTISED_HOSTNAME=mongodb-shard1-primary
+      - MONGODB_SHARDING_MODE=shardsvr
+      - MONGODB_MONGOS_HOST=mongodb-sharded
+      - MONGODB_ROOT_PASSWORD=password123
+      - MONGODB_REPLICA_SET_MODE=primary
+      - MONGODB_REPLICA_SET_KEY=replicasetkey123
+      - MONGODB_REPLICA_SET_NAME=shard1
+    volumes:
+      - 'shard1_data:/bitnami'
+    networks:
+      - webnet
+
+  mongodb-shard2-primary:
+    image: 'bitnami/mongodb-sharded:4.2'
+    environment:
+      - MONGODB_ADVERTISED_HOSTNAME=mongodb-shard2-primary
+      - MONGODB_SHARDING_MODE=shardsvr
+      - MONGODB_MONGOS_HOST=mongodb-sharded
+      - MONGODB_ROOT_PASSWORD=password123
+      - MONGODB_REPLICA_SET_MODE=primary
+      - MONGODB_REPLICA_SET_KEY=replicasetkey123
+      - MONGODB_REPLICA_SET_NAME=shard2
+    volumes:
+      - 'shard2_data:/bitnami'
+    networks:
+      - webnet
+
+
+  mongodb-cfg-primary:
+    image: 'bitnami/mongodb-sharded:4.2'
+    environment:
+      - MONGODB_ADVERTISED_HOSTNAME=mongodb-cfg-primary
+      - MONGODB_SHARDING_MODE=configsvr
+      - MONGODB_ROOT_PASSWORD=password123
+      - MONGODB_REPLICA_SET_MODE=primary
+      - MONGODB_REPLICA_SET_KEY=replicasetkey123
+      - MONGODB_REPLICA_SET_NAME=cfgreplicaset
+    volumes:
+      - 'cfg_data:/bitnami'
+    networks:
+      - webnet
+
 volumes:
-  db_data:
+  shard0_data:
+    driver: local
+  shard1_data:
+    driver: local
+  shard2_data:
+    driver: local
+  cfg_data:
+    driver: local
 
 networks:
   webnet:
-
-

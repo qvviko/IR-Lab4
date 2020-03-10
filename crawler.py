@@ -15,8 +15,7 @@ base_url = "https://www.lyrics.com/lyric/"
 seen = []
 
 client = MongoClient(os.environ.get("MONGO_URL"), int(os.environ.get("MONGO_PORT")),
-                     username='', password='',
-                     authSource='IR-db', authMechanism='SCRAM-SHA-256')
+                     username=os.environ.get("MONGO_USER"), password=os.environ.get("MONGO_PASS"))
 db = client['IR-db']
 app_logger = logging.getLogger('crawler')
 app_logger.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
@@ -104,6 +103,7 @@ if __name__ == "__main__":
     seen = restore_seen()
     if seen is None:
         seen = []
+    app_logger.info(f"Restored n={len(seen)} of seen")
     while True:
         # Finds an article and sends it
         for song in get_songs(seen):

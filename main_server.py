@@ -25,7 +25,8 @@ prefix_tree = PrefixT('')
 n_documents = 0
 t_before_save = 10
 max_doc_on_page = 100
-client = MongoClient(os.environ.get("MONGO_URL"), int(os.environ.get("MONGO_PORT")))
+client = MongoClient(os.environ.get("MONGO_URL"), int(os.environ.get("MONGO_PORT")),
+                     username=os.environ.get("MONGO_USER"), password=os.environ.get("MONGO_PASS"))
 db = client['IR-db']
 seen_db = db['seen']
 doc_db = db['docs']
