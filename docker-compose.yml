@@ -1,0 +1,45 @@
+version: '3.3'
+services:
+  main_server:
+    build: . # build from Dockerfile
+    command: python main_server.py # command to start container
+    volumes:
+      - .:/code
+    networks:
+      - webnet
+    env_file:
+      - .env
+    ports:
+      - 8080:8080
+  #    restart: always
+  crawler:
+    build: .
+    command: python crawler.py # command to start container
+    volumes:
+      - .:/code
+    networks:
+      - webnet
+    env_file:
+      - .env
+    depends_on:
+      - main_server
+    restart: always
+
+  mongo:
+    image: mongo:4.2.0-bionic
+    command: mongod
+    volumes:
+      - ./mongo/data:/mongo/data
+    ports:
+      - 27017:27017
+    env_file:
+      - .env
+    networks:
+      - webnet
+volumes:
+  db_data:
+
+networks:
+  webnet:
+
+

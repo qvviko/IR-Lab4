@@ -1,0 +1,6 @@
+Flask
+nltk
+beautifulsoup4
+requests
+numpy
+pymongo
