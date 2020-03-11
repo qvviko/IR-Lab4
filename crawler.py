@@ -95,7 +95,7 @@ def get_songs(seen):
 def restore_seen():
     try:
         return db['seen'].find_one()['seen']
-    except IndexError:
+    except TypeError:
         return []
 
 
