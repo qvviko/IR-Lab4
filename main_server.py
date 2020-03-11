@@ -38,14 +38,15 @@ vocab_db = db['vocab']
 index_db = db['index']
 deleted_db = db['deleted']
 
+# Make indexes on primary key for index and docs
+index_db.create_index('word', unique=True)
+doc_db.create_index('id', unique=True)
+
 # Setup sharding
 client.admin.command('enableSharding', 'IR-db')
 client.admin.command('shardCollection', 'IR-db.docs', key={'id': 1})
 client.admin.command('shardCollection', 'IR-db.index', key={'word': 1})
 
-# Make indexes on primary key for index and docs
-index_db.create_index('word', unique=True)
-doc_db.create_index('id', unique=True)
 
 # Create lock for writing to the dbs
 write_lock = Lock()
@@ -101,7 +102,10 @@ def store_aux_info():
 
 def open_index(word):
     # Helper function for searching for words in mongo
-    return set(index_db.find_one({'word': word})['docs'])
+    try:
+        return set(index_db.find_one({'word': word})['docs'])
+    except TypeError:
+        return set()
 
 
 def search_in_mongo(query):
